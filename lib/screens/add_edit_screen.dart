@@ -12,8 +12,8 @@ class AddEditScreen extends StatefulWidget {
 }
 
 class _AddEditScreenState extends State<AddEditScreen> {
-  final _titleController = TextEditingController();
-  final _descController = TextEditingController();
+  final titleController = TextEditingController();
+  final descController = TextEditingController();
   String type = 'Assignment';
 
   final service = RecordService();
@@ -21,54 +21,61 @@ class _AddEditScreenState extends State<AddEditScreen> {
   @override
   void initState() {
     if (widget.record != null) {
-      _titleController.text = widget.record!.title;
-      _descController.text = widget.record!.description;
+      titleController.text = widget.record!.title;
+      descController.text = widget.record!.description;
       type = widget.record!.type;
     }
     super.initState();
   }
 
-  void save() async {
-    if (widget.record == null) {
-      await service.addRecord(
-        title: _titleController.text,
-        description: _descController.text,
-        type: type,
-      );
-    } else {
-      await service.updateRecord(
-        id: widget.record!.id,
-        title: _titleController.text,
-        description: _descController.text,
-        type: type,
-      );
-    }
+  Future<void> save() async {
+    try {
+      if (widget.record == null) {
+        await service.addRecord(
+          title: titleController.text,
+          description: descController.text,
+          type: type,
+        );
+      } else {
+        await service.updateRecord(
+          id: widget.record!.id,
+          title: titleController.text,
+          description: descController.text,
+          type: type,
+        );
+      }
 
-    Navigator.pop(context, true);
+      Navigator.pop(context, true);
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.record == null ? 'Add Record' : 'Edit Record'),
-      ),
+      appBar:
+          AppBar(title: Text(widget.record == null ? 'Add Record' : 'Edit Record')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
-              controller: _titleController,
+              controller: titleController,
               decoration: const InputDecoration(labelText: 'Title'),
             ),
             TextField(
-              controller: _descController,
+              controller: descController,
               decoration: const InputDecoration(labelText: 'Description'),
             ),
             DropdownButton<String>(
               value: type,
               items: ['Assignment', 'Note', 'Schedule']
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .map((e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(e),
+                      ))
                   .toList(),
               onChanged: (value) => setState(() => type = value!),
             ),
