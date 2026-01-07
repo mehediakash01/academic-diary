@@ -20,43 +20,63 @@ class _AddEditScreenState extends State<AddEditScreen> {
 
   @override
   void initState() {
+    super.initState();
     if (widget.record != null) {
       titleController.text = widget.record!.title;
       descController.text = widget.record!.description;
       type = widget.record!.type;
     }
-    super.initState();
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    descController.dispose();
+    super.dispose();
   }
 
   Future<void> save() async {
+    if (titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Title is required')),
+      );
+      return;
+    }
+
     try {
       if (widget.record == null) {
         await service.addRecord(
-          title: titleController.text,
-          description: descController.text,
+          title: titleController.text.trim(),
+          description: descController.text.trim(),
           type: type,
         );
       } else {
         await service.updateRecord(
           id: widget.record!.id,
-          title: titleController.text,
-          description: descController.text,
+          title: titleController.text.trim(),
+          description: descController.text.trim(),
           type: type,
         );
       }
 
-      Navigator.pop(context, true);
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:
-          AppBar(title: Text(widget.record == null ? 'Add Record' : 'Edit Record')),
+      appBar: AppBar(
+        title: Text(widget.record == null ? 'Add Record' : 'Edit Record'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -68,19 +88,28 @@ class _AddEditScreenState extends State<AddEditScreen> {
             TextField(
               controller: descController,
               decoration: const InputDecoration(labelText: 'Description'),
+              maxLines: 3,
             ),
+            const SizedBox(height: 10),
             DropdownButton<String>(
               value: type,
-              items: ['Assignment', 'Note', 'Schedule']
-                  .map((e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ))
-                  .toList(),
-              onChanged: (value) => setState(() => type = value!),
+              isExpanded: true,
+              items: const [
+                DropdownMenuItem(value: 'Assignment', child: Text('Assignment')),
+                DropdownMenuItem(value: 'Note', child: Text('Note')),
+                DropdownMenuItem(value: 'Schedule', child: Text('Schedule')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => type = value);
+                }
+              },
             ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: save, child: const Text('Save')),
+            ElevatedButton(
+              onPressed: save,
+              child: const Text('Save'),
+            ),
           ],
         ),
       ),

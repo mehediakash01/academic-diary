@@ -27,16 +27,12 @@ class RecordService {
     final user = supabase.auth.currentUser;
     if (user == null) throw Exception('User not logged in');
 
-    final res = await supabase.from('academic_records').insert({
+    await supabase.from('academic_records').insert({
       'title': title,
       'description': description,
       'type': type,
       'user_id': user.id,
     });
-
-    if (res.error != null) {
-      throw res.error!;
-    }
   }
 
   Future<void> updateRecord({
@@ -45,25 +41,17 @@ class RecordService {
     required String description,
     required String type,
   }) async {
-    final res = await supabase.from('academic_records').update({
+    await supabase.from('academic_records').update({
       'title': title,
       'description': description,
       'type': type,
     }).eq('id', id);
-
-    if (res.error != null) {
-      throw res.error!;
-    }
   }
 
   Future<void> deleteRecord(String id) async {
-    final res = await supabase
+    await supabase
         .from('academic_records')
         .delete()
         .eq('id', id);
-
-    if (res.error != null) {
-      throw res.error!;
-    }
   }
 }
