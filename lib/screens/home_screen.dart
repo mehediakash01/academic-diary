@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/record_service.dart';
+import '../services/auth_service.dart';
 import '../models/academic_record.dart';
 import 'add_edit_screen.dart';
-import '../services/auth_service.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,20 +13,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final service = RecordService();
-  final auth = AuthService();
+  final recordService = RecordService();
+  final authService = AuthService();
 
   late Future<List<AcademicRecord>> records;
 
   @override
   void initState() {
-    records = service.fetchRecords();
+    records = recordService.fetchRecords();
     super.initState();
   }
 
   void refresh() {
     setState(() {
-      records = service.fetchRecords();
+      records = recordService.fetchRecords();
     });
   }
 
@@ -38,14 +39,17 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await auth.signOut();
-              Navigator.pop(context);
+              await authService.signOut();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (_) => false,
+              );
             },
           )
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
         onPressed: () async {
           final result = await Navigator.push(
             context,
@@ -53,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
           if (result == true) refresh();
         },
+        child: const Icon(Icons.add),
       ),
       body: FutureBuilder<List<AcademicRecord>>(
         future: records,
@@ -71,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: data.length,
             itemBuilder: (_, index) {
               final record = data[index];
-
               return ListTile(
                 title: Text(record.title),
                 subtitle: Text(record.type),
@@ -84,7 +88,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => AddEditScreen(record: record),
+                            builder: (_) =>
+                                AddEditScreen(record: record),
                           ),
                         );
                         if (result == true) refresh();
@@ -93,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () async {
-                        await service.deleteRecord(record.id);
+                        await recordService.deleteRecord(record.id);
                         refresh();
                       },
                     ),
