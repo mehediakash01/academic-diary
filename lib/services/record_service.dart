@@ -23,6 +23,7 @@ class RecordService {
     required String title,
     required String description,
     required String type,
+    DateTime? deadline,
   }) async {
     final user = supabase.auth.currentUser;
     if (user == null) throw Exception('User not logged in');
@@ -32,6 +33,7 @@ class RecordService {
       'description': description,
       'type': type,
       'user_id': user.id,
+      'deadline': deadline?.toIso8601String(),
     });
   }
 
@@ -40,11 +42,13 @@ class RecordService {
     required String title,
     required String description,
     required String type,
+    DateTime? deadline,
   }) async {
     await supabase.from('academic_records').update({
       'title': title,
       'description': description,
       'type': type,
+      'deadline': deadline?.toIso8601String(),
     }).eq('id', id);
   }
 
